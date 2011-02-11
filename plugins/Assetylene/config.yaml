@@ -1,9 +1,9 @@
 name: Assetylene
 description: <__trans phrase='Provides a new "Caption" field when inserting an asset into a post, and the ability to customize the HTML markup produced for publishing MT assets.'>
-version: 1.11
+version: 1.11d
 author_name: naoaki.onozaki
 author_link: http://www.zelazny.mydns.jp/
-plugin_link: http://github.com/naoaki011/mt-plugin-assetylene/
+plugin_link: https://github.com/naoaki011/mt-plugin-assetylene/tree/dol
 l10n_class: Assetylene::L10N
 blog_config_template: tmpl/blog_config.tmpl
 settings:
@@ -23,7 +23,7 @@ settings:
     default: img_L
     scope: blog
   lb_select1:
-    default: 1
+    default: 0
     scope: blog
   lightbox_selector1:
     default: 'rel="lightbox"'
@@ -53,7 +53,7 @@ settings:
     default: Caption as alt text
     scope: blog
   pattern3:
-    default: Max link image width 800px
+    default: ''
     scope: blog
   pattern4:
     default: ''
@@ -66,3 +66,4 @@ applications:
         callbacks:
             template_param.asset_options_image: $Assetylene::Assetylene::CMS::asset_options_image
             template_param.asset_insert: $Assetylene::Assetylene::CMS::asset_insert
+            template_source.asset_upload: $Assetylene::Assetylene::Plugin::xfm_src
