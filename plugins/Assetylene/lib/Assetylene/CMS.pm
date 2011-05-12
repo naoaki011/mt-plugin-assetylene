@@ -32,7 +32,7 @@ sub asset_options_image {
 
 # Caption >
     my $opt = $tmpl->createElement('app:setting', {
-        id => 'asset_optins',
+        id => 'asset_options',
         label => MT->translate('Asset Options'),
         label_class => 'no-header',
         hint => '',
@@ -72,11 +72,29 @@ HTML
     $tmpl->insertBefore($opt, $el);
 
 #< Caption
+###
+    my $opt = $tmpl->createElement('app:setting', {
+        id => 'image_alt',
+        label => MT->translate('Image Alt Text'),
+        label_class => 'no-header',
+        hint => '',
+        show_hint => 0,
+    });
+    $opt->innerHTML(<<HTML);
+    <label for="alt_text"><__trans_section component="Assetylene"><__trans phrase='Set alt text for Image.'></__trans_section></label>
+    <input type="text" name="alt_text" value="" style="width:16em;" />
+    <style type="text/css">#alternate_text-field { display: none; } .dialog #content {padding-bottom: 0; }</style>
+HTML
+
+    # Insert new field above the 'image_alignment' field:
+    $tmpl->insertBefore($opt, $el);
+
+###
 # Pattern >
 
     $opt = $tmpl->createElement('app:setting', {
-        id => 'asset_optins',
-        label => MT->translate('Asset Options'),
+        id => 'asset_patterns',
+        label => MT->translate('Asset Patterns'),
         label_class => 'no-header',
         hint => '',
         show_hint => 0,
@@ -325,6 +343,9 @@ sub asset_insert {
         ($param->{img_style}) = $img_tag =~ /\bstyle="([^\"]+)"/s;
         ($param->{img_class}) = $img_tag =~ /\bclass="([^\"]+)"/s;
         ($param->{img_alt}) = $img_tag =~ /\balt="([^\"]+)"/s;
+        if ($app->param('alt_text')) {
+            $param->{img_alt} = $app->param('alt_text');
+        }
 
         $param->{pattern} = $app->param('pattern');
 

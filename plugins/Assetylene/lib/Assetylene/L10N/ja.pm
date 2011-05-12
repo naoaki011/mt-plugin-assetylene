@@ -38,6 +38,7 @@ use vars qw( %Lexicon );
 	'Limit Thumbnail Height' => 'サムネイルの高さを制限',
 	'Limit Image Width' => '画像の幅を制限',
 	'Limit Image Height' => '画像の高さを制限',
+	'Set alt text for Image.' => '画像にaltテキストを設定する',
 );
 
 1;
