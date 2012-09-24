@@ -187,6 +187,38 @@ sub asset_options {
     # Force the tokens of the template to be reprocessed now that
     # we've manipulated it:
     $tmpl->rescan();
+
+
+    # Insert jQuery needed for date/time custom fields
+
+    
+    # The 'mt:Include' MT template tag including 'dialog/footer.tmpl' must be
+    # in the template we're working with to add setvarblock tag above it.
+    my $el2 = ${$tmpl->getElementsByName('dialog/footer.tmpl')}[0]
+        or return;
+
+    my $setvarblock_jq = $tmpl->createElement('setvarblock', {
+        name => 'jq_js_include',
+        append => 1,
+    });
+
+    # Contents of the setvarblock tag:
+    $setvarblock_jq->innerHTML(<<HTML2);
+    jQuery('input.text-date').datepicker({
+        dateFormat: 'yy-mm-dd',
+        dayNamesMin: [<__trans phrase="_LOCALE_CALENDAR_HEADER_">],
+        monthNames: ['- 01','- 02','- 03','- 04','- 05','- 06','- 07','- 08','- 09','- 10','- 11','- 12'],
+        showMonthAfterYear: true,
+        prevText: '&lt;',
+        nextText: '&gt;'
+    });
+HTML2
+
+    # Insert setvarblock above the 'mt:include' tag:
+    $tmpl->insertBefore($setvarblock_jq, $el2);
+    # Force the tokens of the template to be reprocessed now that
+    # we've manipulated it:
+    $tmpl->rescan();
 }
 
 1;
