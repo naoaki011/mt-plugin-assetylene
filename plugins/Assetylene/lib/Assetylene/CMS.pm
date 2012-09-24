@@ -136,4 +136,57 @@ sub asset_insert {
     }
 }
 
+sub asset_options {
+    my ($cb, $app, $param, $tmpl) = @_;
+
+    my $blog = $app->blog;
+    my $blog_id = $blog->id;
+
+    # Assertions:
+    # Need MT 5.0 or greater
+    return unless MT->version_number >= 5.0;
+
+    # Commercial.pack addon (custom fields) must be present
+    return unless MT->component('Commercial');
+
+    # 'asset_id' template parameter must be present.
+    my $asset_id = $param->{asset_id} or return;
+
+    # Asset object must be loadable
+    my $asset = MT::Asset->load( $asset_id ) or return;
+
+
+    # Insert asset/image/audio/video custom fields
+
+
+    # The 'tags' MT template node must be in the template
+    # we're working with to add custom fields below it.
+    my $el = $tmpl->getElementById('tags')
+        or return;
+
+    # createElement() does not pass 'attribute_list' parameter
+    # (required for multiple instances of the same attribute
+    # such as 'regex_replace'), so we have to directly create
+    # an MT::Template::Node element.
+    my $custom_fields = MT::Template::Node->new(
+        tag => 'app:fields',
+        attributes => {
+            blog_id => $blog_id,
+            object_type => $asset->class, 
+            object_id => $asset_id,
+            regex_replace => 1,
+        },
+        attribute_list => [
+            [ regex_replace => ['/class="text"/g','class="text full"'] ],
+            [ regex_replace => ['/class="text high"/g','class="text full low"'] ],
+        ],
+    );
+
+    # Insert custom fields below the 'tags' field:
+    $tmpl->insertAfter($custom_fields, $el);
+    # Force the tokens of the template to be reprocessed now that
+    # we've manipulated it:
+    $tmpl->rescan();
+}
+
 1;
