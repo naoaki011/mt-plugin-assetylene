@@ -35,6 +35,17 @@ sub asset_options_image {
     # description is being placed in an HTML textarea:
     my $caption_safe = MT::Util::encode_html( $asset->description );
 
+    # CSS class of HTML textarea, depending on MT version
+    my $textarea_class;
+    my $mt_version = MT->version_number;
+    if ( $mt_version < 5 ) {              # MT 4.x
+        $textarea_class = 'full-width';
+    } elsif ( $mt_version < 5.1 ) {       # MT 5.0x
+        $textarea_class = 'larger-text';
+    } else {                              # MT 5.1+
+        $textarea_class = 'text full low';
+    }
+
     # Contents of the app:setting tag:
     $opt->innerHTML(<<HTML);
     <input type="checkbox" id="insert_caption" name="insert_caption"
@@ -42,7 +53,7 @@ sub asset_options_image {
     <label for="insert_caption">Insert a caption?</label>
     <div class="textarea-wrapper"><textarea name="caption" style="height: 36px;" rows="2" cols=""
         onfocus="getByID('insert_caption').checked=true; return false;"
-        class="full-width">$caption_safe</textarea></div>
+        class="$textarea_class">$caption_safe</textarea></div>
 HTML
     # Insert new field above the 'image_alignment' field:
     $tmpl->insertBefore($opt, $el);
