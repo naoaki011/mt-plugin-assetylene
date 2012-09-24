@@ -9,3 +9,4 @@ applications:
         callbacks:
             template_param.asset_options_image: $Assetylene::Assetylene::CMS::asset_options_image
             template_param.asset_insert: $Assetylene::Assetylene::CMS::asset_insert
+            template_param.asset_options: $Assetylene::Assetylene::CMS::asset_options
