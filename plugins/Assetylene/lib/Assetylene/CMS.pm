@@ -219,6 +219,31 @@ HTML2
     # Force the tokens of the template to be reprocessed now that
     # we've manipulated it:
     $tmpl->rescan();
+
+
+    # Add <link> tag to Commercial.pack .css file for custom fields styles
+
+
+    # The 'mt:Include' MT template tag including 'dialog/header.tmpl' must be
+    # in the template we're working with to add setvarblock tag above it.
+    my $el3 = ${$tmpl->getElementsByName('dialog/header.tmpl')}[0]
+        or return;
+
+    my $setvarblock_css = $tmpl->createElement('setvarblock', {
+        name => 'html_head',
+        append => 1,
+    });
+
+    # Contents of the setvarblock tag:
+    $setvarblock_css->innerHTML(<<'HTML3');
+<link rel="stylesheet" href="<mt:var name="static_uri">addons/Commercial.pack/styles-customfields.css" type="text/css" media="screen" title="CustomFields Stylesheet" charset="utf-8" />
+HTML3
+
+    # Insert setvarblock above the 'mt:include' tag:
+    $tmpl->insertBefore($setvarblock_css, $el3);
+    # Force the tokens of the template to be reprocessed now that
+    # we've manipulated it:
+    $tmpl->rescan();
 }
 
 1;
