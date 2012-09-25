@@ -246,4 +246,20 @@ HTML3
     $tmpl->rescan();
 }
 
+sub asset_options_source {
+    my ($cb, $app, $src) = @_;
+
+    # Assertions:
+    # Need MT 5.0 or greater
+    return unless MT->version_number >= 5.0;
+
+    # Commercial.pack addon (custom fields) must be present
+    return unless MT->component('Commercial');
+
+    my $magic_token = '<input type="hidden" name="magic_token" value="<mt:var name="magic_token">" />';
+    my $asset_type = '  <input type="hidden" name="asset_type" value="<mt:Asset id="$asset_id"><mt:AssetProperty property="class" escape="html"></mt:Asset>" />';
+    
+    $$src =~ s/($magic_token)/$1\n$asset_type/;
+}
+
 1;
