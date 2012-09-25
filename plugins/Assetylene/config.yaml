@@ -4,6 +4,9 @@ version: 1.02
 author_name: Six Apart Ltd.
 author_link: http://www.sixapart.com/
 
+callbacks:
+    init_app: $Assetylene::Assetylene::CMS::init_app
+
 applications:
     cms:
         callbacks:

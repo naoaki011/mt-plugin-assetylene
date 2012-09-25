@@ -7,6 +7,22 @@ package Assetylene::CMS;
 
 use strict;
 
+my $post_process_upload;
+sub init_app {
+    # MT 5.0 or greater
+    return unless MT->version_number >= 5.0;
+
+    # Override the MT::CMS::Asset:_post_process method to call asset
+    # save_filter, pre_save, and post_save callbacks to process custom
+    # fields when asset is saved.
+    require MT::CMS::Asset;
+    no warnings 'redefine';
+    unless ($post_process_upload) {
+        $post_process_upload = \&MT::CMS::Asset::_process_post_upload;
+        *MT::CMS::Asset::_process_post_upload = \&_process_post_upload;
+    }
+}
+
 sub asset_options_image {
     my ($cb, $app, $param, $tmpl) = @_;
 
@@ -260,6 +276,65 @@ sub asset_options_source {
     my $asset_type = '  <input type="hidden" name="asset_type" value="<mt:Asset id="$asset_id"><mt:AssetProperty property="class" escape="html"></mt:Asset>" />';
     
     $$src =~ s/($magic_token)/$1\n$asset_type/;
+}
+
+sub _process_post_upload {
+    my $app   = shift;
+    my %param = $app->param_hash;
+    my $asset;
+    require MT::Asset;
+    $param{id} && ( $asset = MT::Asset->load( $param{id} ) )
+        or return $app->errtrans("Invalid request.");
+
+    my $mt_version = MT->version_number;
+    my ( $need_perm_check, $perm_check );
+
+    if ( $mt_version < 5.1 ) {        # MT 5.0x
+        if ( $mt_version >= 5.07 ) {
+            $need_perm_check = 1;
+        }
+    } elsif ( $mt_version < 5.2 ) {   # MT 5.1x
+        if ( $mt_version >= 5.13 ) {
+            $need_perm_check = 1;
+        }
+    } else {                          # MT 5.2x
+        $need_perm_check = 1;
+    }
+
+    if ($need_perm_check) {
+        $perm_check =
+            ( $app->can('edit_assets') || $asset->created_by == $app->user->id );
+    }
+
+    unless ( $need_perm_check && !$perm_check ) {
+        my $original = $asset->clone; # For post_save callback
+        $asset->label( $param{label} )             if $param{label};
+        $asset->description( $param{description} ) if $param{description};
+        if ( $param{tags} ) {
+            require MT::Tag;
+            my $tag_delim = chr( $app->user->entry_prefs->{tag_delim} );
+            my @tags = MT::Tag->split( $tag_delim, $param{tags} );
+            $asset->set_tags(@tags);
+        }
+
+        # Run save_filter callbacks prior to saving asset
+        # Custom fields has callback here to validate and
+        # pre-process custom fields before saving
+        my $filter_result = $app->run_callbacks( 'cms_save_filter.asset', $app );
+        return $app->error($app->errstr) unless $filter_result;
+
+        # Added for completeness - no known custom fields callbacks
+        $app->run_callbacks( 'cms_pre_save.asset', $app, $asset, $original );
+
+        $asset->save();
+
+        # Run post_save callbacks to save custom fields
+        $app->run_callbacks( 'cms_post_save.asset', $app, $asset, $original );
+    }
+
+    $asset->on_upload( \%param );
+    require MT::CMS::Asset;
+    return MT::CMS::Asset::asset_insert_text( $app, \%param );
 }
 
 1;
