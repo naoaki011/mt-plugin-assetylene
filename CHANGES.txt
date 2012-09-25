@@ -1,3 +1,9 @@
+# Version 1.03 - September 24, 2012 (davidphillips / 601am)
+
+    * Set CSS class of 'caption' textbox based on MT version.
+
+    * Integrate support for asset custom fields provided by Movable Type 5.
+
 # Version 1.02 - May 24, 2009 (byrnereese)
 
     * Improved some regexes so they are less greedy

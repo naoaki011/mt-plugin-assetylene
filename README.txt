@@ -12,6 +12,10 @@ You can create a custom template module, named "Asset Insertion", and that
 template will then be used to create the HTML for any asset you embed
 into a post.
 
+MT5 only: Custom fields for the appropriate asset object type
+(asset/image/audio/video) are now displayed on the "File Options" dialog
+window when inserting and uploading a new asset file into a post.
+
 There are a number of template variables made available to this template:
 
 * upload_html: This is the original markup MT constructed for the
@@ -49,6 +53,9 @@ if no image is actually inserted and linked to instead).
 
 Also, the asset itself is in context, so any of the MT Asset tags may be
 used to generate the asset markup. And the current blog is also in context.
+
+MT5 only: Custom fields template tags for the appropriate asset object type
+(asset/image/audio/video) may also be used to generate the asset markup.
 
 An example template can be found in:
 
