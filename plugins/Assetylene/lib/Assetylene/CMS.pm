@@ -83,6 +83,9 @@ sub asset_insert {
 
     my $blog = $app->blog;
 
+    # Do not change markup if selecting asset for custom field
+    return 1 if $param->{edit_field} =~ /customfield/;
+
     # Assertions:
     # Load the user-defined "Asset Insertion" template module.
     # Currently, this template must be named in English. Look both

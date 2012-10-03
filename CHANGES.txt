@@ -1,3 +1,8 @@
+# Version 1.04 - October 3, 2012 (davidphillips / 601am)
+
+    * Don't apply Asset Insertion markup if selecting image asset
+      for custom field.
+
 # Version 1.03 - September 24, 2012 (davidphillips / 601am)
 
     * Set CSS class of 'caption' textbox based on MT version.
