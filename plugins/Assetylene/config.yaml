@@ -1,16 +1,26 @@
 name: Assetylene
-description: Provides a new "Caption" field when inserting an asset into a post, and the ability to customize the HTML markup produced for publishing MT assets.
-version: 1.04
+description: <__trans phrase='Provides a new "Caption" field when inserting an asset into a post, and the ability to customize the HTML markup produced for publishing MT assets.'>
+version: 1.04T
 author_name: Six Apart Ltd.
 author_link: http://www.sixapart.com/
 
 callbacks:
     init_app: $Assetylene::Assetylene::CMS::init_app
 
+l10n_class: Assetylene::L10N
+settings:
 applications:
-    cms:
-        callbacks:
-            template_source.asset_options: $Assetylene::Assetylene::CMS::asset_options_source
-            template_param.asset_options_image: $Assetylene::Assetylene::CMS::asset_options_image
-            template_param.asset_insert: $Assetylene::Assetylene::CMS::asset_insert
-            template_param.asset_options: $Assetylene::Assetylene::CMS::asset_options
+  cms:
+    callbacks:
+      template_source.asset_options:
+        code: $Assetylene::Assetylene::CMS::asset_options_source
+        priority: 9
+      template_param.asset_options_image:
+        code: $Assetylene::Assetylene::CMS::asset_options_image
+        priority: 9
+      template_param.asset_insert:
+        code: $Assetylene::Assetylene::CMS::asset_insert
+        priority: 9
+      template_param.asset_options:
+        code: $Assetylene::Assetylene::CMS::asset_options
+        priority: 9
