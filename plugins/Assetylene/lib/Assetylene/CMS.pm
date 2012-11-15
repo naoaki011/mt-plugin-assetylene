@@ -6,6 +6,9 @@
 package Assetylene::CMS;
 
 use strict;
+use MT 4;
+use Assetylene::L10N;
+use MT::Util qw( encode_html );
 
 my $post_process_upload;
 sub init_app {
@@ -38,41 +41,20 @@ sub asset_options_image {
     my $el = $tmpl->getElementById('image_alignment')
         or return;
 
-    my $opt = $tmpl->createElement('app:setting', {
-        id => 'image_caption',
-        label => MT->translate('Caption'),
-        label_class => 'no-header',
-        hint => '',
-        show_hint => 0,
-    });
-
-    require MT::Util;
-    # Encode any special characters as HTML entities, since this
-    # description is being placed in an HTML textarea:
-    my $caption_safe = MT::Util::encode_html( $asset->description );
-
-    # CSS class of HTML textarea, depending on MT version
-    my $textarea_class;
-    my $mt_version = MT->version_number;
-    if ( $mt_version < 5 ) {              # MT 4.x
-        $textarea_class = 'full-width';
-    } elsif ( $mt_version < 5.1 ) {       # MT 5.0x
-        $textarea_class = 'larger-text';
-    } else {                              # MT 5.1+
-        $textarea_class = 'text full low';
-    }
-
-    # Contents of the app:setting tag:
-    $opt->innerHTML(<<HTML);
-    <input type="checkbox" id="insert_caption" name="insert_caption"
-        value="1" />
-    <label for="insert_caption">Insert a caption?</label>
-    <div class="textarea-wrapper"><textarea name="caption" style="height: 36px;" rows="2" cols=""
-        onfocus="getByID('insert_caption').checked=true; return false;"
-        class="$textarea_class">$caption_safe</textarea></div>
-HTML
-    # Insert new field above the 'image_alignment' field:
-    $tmpl->insertBefore($opt, $el);
+    my $blog = $app->blog or return;
+    my $plugin = MT->component("Assetylene");
+    my $scope = "blog:".$blog->id;
+    my $insert_tmpl = $app->model('template')->load({
+                                                name => 'Asset Insertion',
+                                                type => 'custom',
+                                                blog_id => [ $blog->id, 0 ]
+                                               }) ||
+                      $app->model('template')->load({
+                                                identifier => 'asset_insertion',
+                                                type => 'custom',
+                                                blog_id => [ $blog->id, 0 ]
+                                               });
+    my $opt;
     # Force the tokens of the template to be reprocessed now that
     # we've manipulated it:
     $tmpl->rescan();
@@ -81,7 +63,11 @@ HTML
 sub asset_insert {
     my ($cb, $app, $param, $tmpl) = @_;
 
-    my $blog = $app->blog;
+    my $blog_id = $app->param('blog_id');
+    use MT::Blog;
+    my $blog = MT::Blog->load($blog_id) or die;
+    my $plugin = MT->component("Assetylene");
+    my $scope = "blog:".$blog_id;
 
     # Do not change markup if selecting asset for custom field
     return 1 if $param->{edit_field} =~ /customfield/;
@@ -91,8 +77,15 @@ sub asset_insert {
     # Currently, this template must be named in English. Look both
     # at the blog and system level for this template.
     my $insert_tmpl = $app->model('template')->load({
-        name => 'Asset Insertion', type => 'custom',
-        blog_id => [ $blog->id, 0 ] });
+                                                name => 'Asset Insertion',
+                                                type => 'custom',
+                                                blog_id => [ $blog->id, 0 ]
+                                               }) ||
+                      $app->model('template')->load({
+                                                identifier => 'asset_insertion',
+                                                type => 'custom',
+                                                blog_id => [ $blog->id, 0 ]
+                                               });
     return unless $insert_tmpl;
 
     my $asset = $tmpl->context->stash('asset');
@@ -143,16 +136,20 @@ sub asset_insert {
     # Process the user-defined template:
     my $new_html = $insert_tmpl->output;
 
-    if (defined($new_html)) {
-        # Replace the MT generated asset markup with the user-defined
-        # markup:
-        $param->{upload_html} = $new_html;
-    }
-    else {
+    unless (defined($new_html)) {
         # Template build error: die, so this gets logged (we're in a
         # callback, so it won't be surfaced to the user unfortunately)
         die "Error from Asset Insertion module: " . $insert_tmpl->errstr;
     }
+    my $ua = $ENV{'HTTP_USER_AGENT'};
+    if ($ua =~ /MSIE/) {
+        $new_html =~ s/<!--[\s\S]*?-->//g;
+    }
+    $new_html =~ s/\s*\n+/\n/g;
+    # Replace the MT generated asset markup with the user-defined
+    # markup:
+    $param->{upload_html} = $new_html;
+
 }
 
 sub asset_options {
@@ -338,6 +335,31 @@ sub _process_post_upload {
     $asset->on_upload( \%param );
     require MT::CMS::Asset;
     return MT::CMS::Asset::asset_insert_text( $app, \%param );
+}
+
+sub is_user_can {
+    my ( $blog, $user, $permission ) = @_;
+    $permission = 'can_' . $permission;
+    my $perm = $user->is_superuser;
+    unless ( $perm ) {
+        if ( $blog ) {
+            my $admin = 'can_administer_blog';
+            $perm = $user->permissions( $blog->id )->$admin;
+            $perm = $user->permissions( $blog->id )->$permission unless $perm;
+        } else {
+            $perm = $user->permissions()->$permission;
+        }
+    }
+    return $perm;
+}
+
+sub doLog {
+    my ($msg) = @_; 
+    return unless defined($msg);
+    require MT::Log;
+    my $log = MT::Log->new;
+    $log->message($msg) ;
+    $log->save or die $log->errstr;
 }
 
 1;
